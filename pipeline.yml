@@ -1,0 +1,89 @@
+version: "1.0"
+
+# Define multiple environments (dev, staging, prod)
+environments:
+  - name: dev
+    branch: main
+  - name: prod
+    branch: main
+
+# Services (from your repo)
+services:
+  - name: auth-service
+    type: docker
+    dockerfile_path: ./auth-service/Dockerfile
+    env:
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}   # Supplied in Sevalla dashboard
+    ports:
+      - 8081
+
+  - name: wallet-service
+    type: docker
+    dockerfile_path: ./wallet-service/Dockerfile
+    ports:
+      - 8082
+
+  - name: transaction-service
+    type: docker
+    dockerfile_path: ./transaction-service/Dockerfile
+    ports:
+      - 8083
+
+  - name: cashapp-proxy
+    type: docker
+    dockerfile_path: ./cashapp-proxy/Dockerfile
+    ports:
+      - 8084
+
+  - name: nginx
+    type: docker
+    dockerfile_path: ./nginx/Dockerfile
+    context: ./nginx
+    ports:
+      - 80
+    depends_on:
+      - auth-service
+      - wallet-service
+      - transaction-service
+      - cashapp-proxy
+
+  - name: frontend
+    type: static-site
+    context: ./frontend
+    index_document: casino_gateway.html
+    error_document: casino_gateway.html
+
+# Database (if needed)
+databases:
+  - name: hydra-db
+    type: postgres
+    version: "15"
+    env:
+      - key: DATABASE_URL
+        value: ${DATABASE_URL}
+
+# Pipelines (build + deploy on commit)
+pipelines:
+  - name: build-and-deploy
+    environment: dev
+    on_commit: true
+    services:
+      - auth-service
+      - wallet-service
+      - transaction-service
+      - cashapp-proxy
+      - nginx
+      - frontend
+  - name: nginx
+    type: docker
+    dockerfile_path: ./nginx/Dockerfile
+    context: ./nginx
+    ports:
+      - 80
+    depends_on:
+      - auth-service
+      - wallet-service
+      - transaction-service
+      - cashapp-proxy
+

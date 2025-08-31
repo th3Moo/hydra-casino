@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hydra Casino Gateway</title>
+</head>
+<body>
+  <h1>Welcome to Hydra Casino Gateway</h1>
+  <button onclick="login()">Login</button>
+
+  <script>
+    async function login() {
+      const res = await fetch("/auth/login", { method: "POST" });
+      const token = await res.text();
+      alert("Got token: " + token);
+    }
+  </script>
+</body>
+</html>
