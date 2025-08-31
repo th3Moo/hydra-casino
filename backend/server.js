@@ -1,31 +1,19 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const fs = require("fs");
-const https = require("https");
-const path = require("path");
-
-const authRoutes = require("./routes/auth");
-const transactionRoutes = require("./routes/transactions");
-
+const express = require('express');
+const path = require('path');
 const app = express();
-app.use(cors());
+
+// API routes
 app.use(express.json());
-app.use(helmet());
-app.use(morgan("dev"));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/transactions", transactionRoutes);
-
-const PORT = process.env.PORT || 5000;
-
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, "certs", "key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "certs", "cert.pem")),
-};
-
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`Server is running securely on http://localhost:${PORT}`);
+app.get('/api/hello', (req, res) => {
+  res.json({ message: 'Hello from Hydra API!' });
 });
+
+// Serve frontend build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Hydra running on port ${PORT}`));
